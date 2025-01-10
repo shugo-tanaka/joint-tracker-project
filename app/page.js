@@ -2,6 +2,8 @@
 To Do:
 Connect to git hub
 right now, left and right can only handle the same file.
+
+maybe make it an option to overlay the joints.
 */
 
 "use client";
@@ -36,93 +38,75 @@ const DragDrop = () => {
     });
 
   return (
-    <div className="flex justify-center align-center p-10">
-      <div className="flex flex-col justify-center align-center">
-        <div className="text-black text-lg text-center">File Dropper</div>
-        <div className="holds-L-R flex flex-row m-10">
-          <div className="left flex flex-col justify-center">
+    <div className="flex justify-center align-center py-10">
+      <div className="flex flex-col justify-center align-center w-full m-10">
+        {" "}
+        {/*holds the header and area for drop files*/}
+        <div className="text-black text-xl text-center">Joint Tracker</div>
+        <div className="holds-L-R flex flex-row my-10 justify-center">
+          {" "}
+          {/*holds the two drop zones*/}
+          <div className="left flex flex-col justify-center w-full">
+            {" "}
+            {/*holds video 1 divs*/}
             <div
               {...getRootProps()}
-              style={{
-                border: "2px dashed #ccc",
-                padding: "5px",
-                width: "400px",
-                textAlign: "center",
-                cursor: "pointer",
-              }}
+              className="border-2 border-dashed border-gray-300 p-2.5 w-full text-center cursor-pointer"
             >
               <input {...getInputProps()} />
               <p className="text-black">
-                Drag & drop a file here, or click to select
+                Video 1: Drag & drop a file here, or click to select
               </p>
+              {file && (
+                <div style={{ marginTop: "20px" }}>
+                  {file.endsWith(".mp4") ? (
+                    <video
+                      src={file}
+                      alt="Uploaded Preview"
+                      className="max-w-full h-fit"
+                      controls
+                    />
+                  ) : (
+                    <video
+                      src={file}
+                      controls
+                      className="max-w-full h-fit rounded-lg"
+                    />
+                  )}
+                </div>
+              )}
             </div>
-
-            {file && (
-              <div style={{ marginTop: "20px" }}>
-                <h4>Video 1:</h4>
-                {file.endsWith(".mp4") ? (
-                  <video
-                    src={file}
-                    alt="Uploaded Preview"
-                    style={{ maxWidth: "100%", height: "auto" }}
-                    controls
-                  />
-                ) : (
-                  <video
-                    src={file}
-                    controls
-                    style={{
-                      maxWidth: "100%",
-                      height: "auto",
-                      borderRadius: "8px",
-                    }}
-                  />
-                )}
-              </div>
-            )}
           </div>
-          <div className="C p-5"></div>{" "}
+          <div className="C w-5"></div>{" "}
           {/*just to add space between the videos*/}
-          <div className="Right flex flex-col justify-center">
+          <div className="Right flex flex-col justify-center w-full">
             <div
               {...getRootProps2()}
-              style={{
-                border: "2px dashed #ccc",
-                padding: "5px",
-                width: "400px",
-                textAlign: "center",
-                cursor: "pointer",
-              }}
+              className="border-2 border-dashed border-gray-300 p-2.5 w-full text-center cursor-pointer"
             >
               <input {...getInputProps2()} />
               <p className="text-black">
-                Drag & drop a file here, or click to select
+                Video 2: Drag & drop a file here, or click to select
               </p>
+              {file2 && (
+                <div style={{ marginTop: "20px" }}>
+                  {file2.endsWith(".mp4") ? (
+                    <video
+                      src={file2}
+                      alt="Uploaded Preview"
+                      className="max-w-full h-fit"
+                      controls
+                    />
+                  ) : (
+                    <video
+                      src={file2}
+                      controls
+                      className="max-w-full h-fit rounded-lg"
+                    />
+                  )}
+                </div>
+              )}
             </div>
-
-            {file2 && (
-              <div style={{ marginTop: "20px" }}>
-                <h4>Video 2:</h4>
-                {file2.endsWith(".mp4") ? (
-                  <video
-                    src={file2}
-                    alt="Uploaded Preview"
-                    style={{ maxWidth: "100%", height: "auto" }}
-                    controls
-                  />
-                ) : (
-                  <video
-                    src={file2}
-                    controls
-                    style={{
-                      maxWidth: "100%",
-                      height: "auto",
-                      borderRadius: "8px",
-                    }}
-                  />
-                )}
-              </div>
-            )}
           </div>
         </div>
       </div>
