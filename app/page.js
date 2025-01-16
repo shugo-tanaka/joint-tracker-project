@@ -1,24 +1,51 @@
 /*
 To Do:
-Connect to git hub
-right now, left and right can only handle the same file.
-
 maybe make it an option to overlay the joints.
 */
 
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useDropzone } from "react-dropzone";
 
 const DragDrop = () => {
   const [file, setFile] = useState(null);
   const [file2, setFile2] = useState(null);
+  const [fileWithJoint, setFileWithJoint] = useState(null);
+  const [file2WithJoint, setFile2WithJoint] = useState(null);
 
   const onDrop = (acceptedFiles) => {
     const uploadedFile = acceptedFiles[0];
     setFile(URL.createObjectURL(uploadedFile));
   };
+
+  useEffect(() => {
+    const getJoints1 = async () => {
+      const formData = new FormData();
+      formData.append("file", file); // Ensure file is added correctly
+
+      try {
+        const response = await fetch("http://127.0.0.1:8000/joint_tracker/", {
+          method: "POST",
+          body: formData,
+        });
+
+        if (response.ok) {
+          const data = await response.blob();
+          const url = URL.createObjectURL(data);
+          setFileWithJoint(url);
+        } else {
+          console.error("Error processing the video", response.status);
+        }
+      } catch (error) {
+        console.error("Error:", error);
+      }
+    };
+
+    if (file) {
+      getJoints1();
+    }
+  }, [file]);
 
   const onDrop2 = (acceptedFiles2) => {
     const uploadedFile2 = acceptedFiles2[0];
