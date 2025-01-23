@@ -11,18 +11,22 @@ import { useDropzone } from "react-dropzone";
 const DragDrop = () => {
   const [file, setFile] = useState(null);
   const [file2, setFile2] = useState(null);
+  const [fileToSend, setFileToSend] = useState(null);
   const [fileWithJoint, setFileWithJoint] = useState(null);
   const [file2WithJoint, setFile2WithJoint] = useState(null);
 
   const onDrop = (acceptedFiles) => {
     const uploadedFile = acceptedFiles[0];
     setFile(URL.createObjectURL(uploadedFile));
+    setFileToSend(uploadedFile);
   };
 
   useEffect(() => {
     const getJoints1 = async () => {
+      // console.log("file has changed:", file);
       const formData = new FormData();
-      formData.append("file", file); // Ensure file is added correctly
+      formData.append("file", fileToSend); // Ensure file is added correctly
+      // console.log([...formData]);
 
       try {
         const response = await fetch("http://127.0.0.1:8000/joint_tracker/", {
@@ -32,8 +36,12 @@ const DragDrop = () => {
 
         if (response.ok) {
           const data = await response.blob();
+          console.log("Video data size:", data.size);
+          // console.log("this is the response:", response);
           const url = URL.createObjectURL(data);
           setFileWithJoint(url);
+          // console.log("Video URL:", url);
+          // window.open(url, "_blank");
         } else {
           console.error("Error processing the video", response.status);
         }
@@ -44,6 +52,8 @@ const DragDrop = () => {
 
     if (file) {
       getJoints1();
+      console.log("getJoints 1 has finished running");
+      // console.log("this is fileWithJoint:", fileWithJoint);
     }
   }, [file]);
 
@@ -54,13 +64,20 @@ const DragDrop = () => {
   };
 
   const { getRootProps, getInputProps } = useDropzone({
-    accept: ["image/jpeg", "image/png", "image/gif", "video/mp4"],
+    accept: [
+      "image/jpeg",
+      "image/png",
+      "image/gif",
+      "video/mp4",
+      "video/avi",
+      "video/mov",
+    ],
     onDrop,
   });
 
   const { getRootProps: getRootProps2, getInputProps: getInputProps2 } =
     useDropzone({
-      accept: ["image/jpeg", "image/png", "image/gif", "video/mp4"],
+      accept: ["video/mp4", "image/jpeg", "image/png", "image/gif"],
       onDrop: onDrop2,
     });
 
@@ -115,18 +132,18 @@ const DragDrop = () => {
               <p className="text-black">
                 Video 2: Drag & drop a file here, or click to select
               </p>
-              {file2 && (
+              {fileWithJoint && (
                 <div style={{ marginTop: "20px" }}>
-                  {file2.endsWith(".mp4") ? (
+                  {fileWithJoint.endsWith(".mp4") ? (
                     <video
-                      src={file2}
+                      src={fileWithJoint}
                       alt="Uploaded Preview"
                       className="max-w-full h-fit"
                       controls
                     />
                   ) : (
                     <video
-                      src={file2}
+                      src={fileWithJoint}
                       controls
                       className="max-w-full h-fit rounded-lg"
                     />
