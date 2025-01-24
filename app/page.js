@@ -36,12 +36,15 @@ const DragDrop = () => {
 
         if (response.ok) {
           const data = await response.blob();
-          console.log("Video data size:", data.size);
-          // console.log("this is the response:", response);
-          const url = URL.createObjectURL(data);
+          const mp4Data = new Blob([data], { type: "video/mp4" });
+          // console.log("Video data size:", data.size);
+          const url = URL.createObjectURL(mp4Data);
+          console.log("this is the url:", url);
           setFileWithJoint(url);
-          // console.log("Video URL:", url);
-          // window.open(url, "_blank");
+          // const link = document.createElement("a");
+          // link.href = url;
+          // link.download = "output.mp4";
+          // link.click();
         } else {
           console.error("Error processing the video", response.status);
         }
@@ -56,6 +59,14 @@ const DragDrop = () => {
       // console.log("this is fileWithJoint:", fileWithJoint);
     }
   }, [file]);
+
+  useEffect(() => {
+    return () => {
+      if (fileWithJoint) {
+        URL.revokeObjectURL(fileWithJoint); // Cleanup the URL when the component unmounts or URL changes
+      }
+    };
+  }, [fileWithJoint]);
 
   const onDrop2 = (acceptedFiles2) => {
     const uploadedFile2 = acceptedFiles2[0];
@@ -102,22 +113,12 @@ const DragDrop = () => {
                 Video 1: Drag & drop a file here, or click to select
               </p>
               {file && (
-                <div style={{ marginTop: "20px" }}>
-                  {file.endsWith(".mp4") ? (
-                    <video
-                      src={file}
-                      alt="Uploaded Preview"
-                      className="max-w-full h-fit"
-                      controls
-                    />
-                  ) : (
-                    <video
-                      src={file}
-                      controls
-                      className="max-w-full h-fit rounded-lg"
-                    />
-                  )}
-                </div>
+                <video
+                  src={file}
+                  controls
+                  className="max-w-full h-fit rounded-lg"
+                  type="video/mp4"
+                />
               )}
             </div>
           </div>
