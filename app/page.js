@@ -1,6 +1,6 @@
 /*
 To Do:
-maybe make it an option to overlay the joints.
+show error message if show kinetic chain is clicked but there is not a file returned yet.
 */
 
 "use client";
@@ -12,8 +12,10 @@ const DragDrop = () => {
   const [file, setFile] = useState(null);
   const [file2, setFile2] = useState(null);
   const [fileToSend, setFileToSend] = useState(null);
+  const [fileToSend2, setFileToSend2] = useState(null);
   const [fileWithJoint, setFileWithJoint] = useState(null);
-  const [file2WithJoint, setFile2WithJoint] = useState(null);
+  const [fileWithJoint2, setFileWithJoint2] = useState(null);
+  const [showKineticChain, setShowKineticChain] = useState(false);
 
   const onDrop = (acceptedFiles) => {
     const uploadedFile = acceptedFiles[0];
@@ -36,15 +38,27 @@ const DragDrop = () => {
 
         if (response.ok) {
           const data = await response.blob();
-          const mp4Data = new Blob([data], { type: "video/mp4" });
+          // const data = new Blob([response], { type: "video/mp4" });
+
+          console.log(
+            "Response content type:",
+            response.headers.get("Content-Type")
+          );
+
+          // const mp4Data = new Blob([data], { type: "video/mp4" });
           // console.log("Video data size:", data.size);
-          const url = URL.createObjectURL(mp4Data);
+          const url = URL.createObjectURL(data);
+          console.log("Video data size:", data.size);
+
           console.log("this is the url:", url);
-          setFileWithJoint(url);
+
+          console.log("Video MIME type:", data.type);
           // const link = document.createElement("a");
           // link.href = url;
           // link.download = "output.mp4";
           // link.click();
+          // window.open(url);
+          setFileWithJoint(url);
         } else {
           console.error("Error processing the video", response.status);
         }
@@ -71,19 +85,72 @@ const DragDrop = () => {
   const onDrop2 = (acceptedFiles2) => {
     const uploadedFile2 = acceptedFiles2[0];
     setFile2(URL.createObjectURL(uploadedFile2));
+    setFileToSend2(uploadedFile2);
     // console.log("onDrop2 completed");
   };
 
+  useEffect(() => {
+    const getJoints2 = async () => {
+      // console.log("file has changed:", file);
+      const formData = new FormData();
+      formData.append("file", fileToSend2); // Ensure file is added correctly
+      // console.log([...formData]);
+
+      try {
+        const response = await fetch("http://127.0.0.1:8000/joint_tracker/", {
+          method: "POST",
+          body: formData,
+        });
+
+        if (response.ok) {
+          const data = await response.blob();
+          // const data = new Blob([response], { type: "video/mp4" });
+
+          console.log(
+            "Response content type:",
+            response.headers.get("Content-Type")
+          );
+
+          // const mp4Data = new Blob([data], { type: "video/mp4" });
+          // console.log("Video data size:", data.size);
+          const url = URL.createObjectURL(data);
+          console.log("Video data size:", data.size);
+
+          console.log("this is the url:", url);
+
+          console.log("Video MIME type:", data.type);
+          // const link = document.createElement("a");
+          // link.href = url;
+          // link.download = "output.mp4";
+          // link.click();
+          // window.open(url);
+          setFileWithJoint2(url);
+        } else {
+          console.error("Error processing the video", response.status);
+        }
+      } catch (error) {
+        console.error("Error:", error);
+      }
+    };
+
+    if (file2) {
+      getJoints2();
+      console.log("getJoints 2 has finished running");
+      // console.log("this is fileWithJoint:", fileWithJoint);
+    }
+  }, [file2]);
+
+  useEffect(() => {
+    return () => {
+      if (fileWithJoint2) {
+        URL.revokeObjectURL(fileWithJoint2); // Cleanup the URL when the component unmounts or URL changes
+      }
+    };
+  }, [fileWithJoint2]);
+
   const { getRootProps, getInputProps } = useDropzone({
-    accept: [
-      "image/jpeg",
-      "image/png",
-      "image/gif",
-      "video/mp4",
-      "video/avi",
-      "video/mov",
-    ],
-    onDrop,
+    accept: ["video/mp4", "image/jpeg", "image/png", "image/gif"],
+    onDrop: onDrop,
   });
 
   const { getRootProps: getRootProps2, getInputProps: getInputProps2 } =
@@ -92,13 +159,41 @@ const DragDrop = () => {
       onDrop: onDrop2,
     });
 
+  const handleKineticChain = (e) => {
+    e.preventDefault();
+    if (showKineticChain) {
+      setShowKineticChain(false);
+    } else {
+      setShowKineticChain(true);
+    }
+  };
+
   return (
     <div className="flex justify-center align-center py-10">
       <div className="flex flex-col justify-center align-center w-full m-10">
         {" "}
         {/*holds the header and area for drop files*/}
         <div className="text-black text-xl text-center">Joint Tracker</div>
-        <div className="holds-L-R flex flex-row my-10 justify-center">
+        {showKineticChain ? (
+          <button
+            className="my-5 mx-auto bg-white hover:bg-gray-100 text-gray-800 px-4 border border-gray-400 rounded shadow"
+            onClick={(e) => {
+              handleKineticChain(e);
+            }}
+          >
+            Hide Kinetic Chain
+          </button>
+        ) : (
+          <button
+            className="my-5 mx-auto bg-white hover:bg-gray-100 text-gray-800 px-4 border border-gray-400 rounded shadow"
+            onClick={(e) => {
+              handleKineticChain(e);
+            }}
+          >
+            Show Kinetic Chain
+          </button>
+        )}
+        <div className="holds-L-R flex flex-row my-5 justify-center">
           {" "}
           {/*holds the two drop zones*/}
           <div className="left flex flex-col justify-center w-full">
@@ -112,12 +207,22 @@ const DragDrop = () => {
               <p className="text-black">
                 Video 1: Drag & drop a file here, or click to select
               </p>
-              {file && (
+              {file && !showKineticChain && (
                 <video
                   src={file}
                   controls
                   className="max-w-full h-fit rounded-lg"
                   type="video/mp4"
+                />
+              )}
+              {fileWithJoint && showKineticChain && (
+                <video
+                  src={fileWithJoint}
+                  controls
+                  className="max-w-full h-fit rounded-lg"
+                  type="video/mp4"
+                  onError={() => console.error("Error loading video")}
+                  onLoadedData={() => console.log("successfully loaded video")}
                 />
               )}
             </div>
@@ -133,24 +238,70 @@ const DragDrop = () => {
               <p className="text-black">
                 Video 2: Drag & drop a file here, or click to select
               </p>
-              {fileWithJoint && (
+              {file2 && !showKineticChain && (
+                <video
+                  src={file2}
+                  controls
+                  className="max-w-full h-fit rounded-lg"
+                  type="video/mp4"
+                />
+              )}
+              {fileWithJoint2 && showKineticChain && (
+                <video
+                  src={fileWithJoint2}
+                  controls
+                  className="max-w-full h-fit rounded-lg"
+                  type="video/mp4"
+                  onError={() => console.error("Error loading video")}
+                  onLoadedData={() => console.log("successfully loaded video")}
+                />
+              )}
+              {/* {fileWithJoint && (
                 <div style={{ marginTop: "20px" }}>
-                  {fileWithJoint.endsWith(".mp4") ? (
+                  {fileWithJoint.endsWith("mp4") ? (
                     <video
                       src={fileWithJoint}
                       alt="Uploaded Preview"
                       className="max-w-full h-fit"
                       controls
+                      onError={() =>
+                        console.error(
+                          "Error loading video option 1",
+                          fileWithJoint
+                        )
+                      }
+                      onLoadedData={() =>
+                        console.log("Video loaded successfully")
+                      }
                     />
                   ) : (
+                    // <video controls className="max-w-full h-fit rounded-lg">
+                    //   <source
+                    //     src={fileWithJoint}
+                    //     type="video/mp4"
+                    //     onError={() => console.log("Error loading video")}
+                    //     onLoadedData={() =>
+                    //       console.log("video loaded successfully")
+                    //     }
+                    //   ></source>
+                    // </video>
                     <video
                       src={fileWithJoint}
                       controls
                       className="max-w-full h-fit rounded-lg"
+                      onError={() =>
+                        console.error(
+                          "Error loading video option 2",
+                          fileWithJoint
+                        )
+                      }
+                      onLoadedData={() =>
+                        console.log("Video loaded successfully")
+                      }
                     />
                   )}
                 </div>
-              )}
+              )} */}
             </div>
           </div>
         </div>
