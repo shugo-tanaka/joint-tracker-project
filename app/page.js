@@ -1,11 +1,15 @@
 /*
 To Do:
 show error message if show kinetic chain is clicked but there is not a file returned yet.
+create a show kinetic chain button for left side and right side.
+if a new file is loaded, show video as loading until the original has been processed into a video with tracking.
+Need to sync the times of the video!
+original and processed video have different time? how?
 */
 
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useDropzone } from "react-dropzone";
 
 const DragDrop = () => {
@@ -16,6 +20,10 @@ const DragDrop = () => {
   const [fileWithJoint, setFileWithJoint] = useState(null);
   const [fileWithJoint2, setFileWithJoint2] = useState(null);
   const [showKineticChain, setShowKineticChain] = useState(false);
+  const originalVideoRef1 = useRef(null);
+  const originalVideoRef2 = useRef(null);
+  const trackedVideoRef1 = useRef(null);
+  const trackedVideoRef2 = useRef(null);
 
   const onDrop = (acceptedFiles) => {
     const uploadedFile = acceptedFiles[0];
@@ -161,10 +169,41 @@ const DragDrop = () => {
 
   const handleKineticChain = (e) => {
     e.preventDefault();
+
     if (showKineticChain) {
-      setShowKineticChain(false);
+      // Sync the current time of the original video to the tracked video
+      if (originalVideoRef1.current && trackedVideoRef1.current) {
+        console.log(
+          "original video's previouse time:",
+          originalVideoRef1.currentTime
+        );
+        trackedVideoRef1.current.pause(); // Pause the tracked video
+
+        originalVideoRef1.currentTime = trackedVideoRef1.currentTime; // Sync time
+
+        console.log(
+          "original video's time after sync:",
+          originalVideoRef1.currentTime
+        );
+        setShowKineticChain(false);
+      }
     } else {
-      setShowKineticChain(true);
+      // Sync the current time of the tracked video to the original video
+      if (originalVideoRef1.current && trackedVideoRef1.current) {
+        console.log(
+          "Tracked video's previouse time:",
+          originalVideoRef1.currentTime
+        );
+        originalVideoRef1.current.pause(); // Pause the original video
+
+        trackedVideoRef1.currentTime = originalVideoRef1.currentTime; // Sync time
+
+        console.log(
+          "Tracked video's time after sync:",
+          originalVideoRef1.currentTime
+        );
+        setShowKineticChain(true);
+      }
     }
   };
 
@@ -173,12 +212,15 @@ const DragDrop = () => {
       <div className="flex flex-col justify-center align-center w-full m-10">
         {" "}
         {/*holds the header and area for drop files*/}
-        <div className="text-black text-xl text-center">Joint Tracker</div>
+        <div className="text-black text-xl text-center">
+          Kinetic Chain Comparison
+        </div>
         {showKineticChain ? (
           <button
             className="my-5 mx-auto bg-white hover:bg-gray-100 text-gray-800 px-4 border border-gray-400 rounded shadow"
             onClick={(e) => {
               handleKineticChain(e);
+              console.log("button clicked");
             }}
           >
             Hide Kinetic Chain
@@ -188,6 +230,7 @@ const DragDrop = () => {
             className="my-5 mx-auto bg-white hover:bg-gray-100 text-gray-800 px-4 border border-gray-400 rounded shadow"
             onClick={(e) => {
               handleKineticChain(e);
+              console.log("button clicked");
             }}
           >
             Show Kinetic Chain
@@ -207,24 +250,34 @@ const DragDrop = () => {
               <p className="text-black">
                 Video 1: Drag & drop a file here, or click to select
               </p>
-              {file && !showKineticChain && (
-                <video
-                  src={file}
-                  controls
-                  className="max-w-full h-fit rounded-lg"
-                  type="video/mp4"
-                />
-              )}
-              {fileWithJoint && showKineticChain && (
-                <video
-                  src={fileWithJoint}
-                  controls
-                  className="max-w-full h-fit rounded-lg"
-                  type="video/mp4"
-                  onError={() => console.error("Error loading video")}
-                  onLoadedData={() => console.log("successfully loaded video")}
-                />
-              )}
+              <div className="relative w-full max-w-lg h-auto">
+                {file && (
+                  <video
+                    src={file}
+                    ref={originalVideoRef1}
+                    controls
+                    className={`absolute top-0 left-0 w-full h-auto rounded-lg ${
+                      showKineticChain ? "z-0" : "z-10"
+                    }`}
+                    type="video/mp4"
+                  />
+                )}
+                {fileWithJoint && (
+                  <video
+                    src={fileWithJoint}
+                    ref={trackedVideoRef1}
+                    controls
+                    className={`absolute top-0 left-0 w-full h-auto rounded-lg ${
+                      showKineticChain ? "z-10" : "z-0"
+                    }`}
+                    type="video/mp4"
+                    onError={() => console.error("Error loading video")}
+                    onLoadedData={() =>
+                      console.log("Successfully loaded video")
+                    }
+                  />
+                )}
+              </div>
             </div>
           </div>
           <div className="C w-5"></div>{" "}
@@ -238,24 +291,35 @@ const DragDrop = () => {
               <p className="text-black">
                 Video 2: Drag & drop a file here, or click to select
               </p>
-              {file2 && !showKineticChain && (
-                <video
-                  src={file2}
-                  controls
-                  className="max-w-full h-fit rounded-lg"
-                  type="video/mp4"
-                />
-              )}
-              {fileWithJoint2 && showKineticChain && (
-                <video
-                  src={fileWithJoint2}
-                  controls
-                  className="max-w-full h-fit rounded-lg"
-                  type="video/mp4"
-                  onError={() => console.error("Error loading video")}
-                  onLoadedData={() => console.log("successfully loaded video")}
-                />
-              )}
+              <div className="relative w-full max-w-lg h-auto">
+                {file2 && (
+                  <video
+                    src={file2}
+                    ref={originalVideoRef2}
+                    controls
+                    className={`absolute top-0 left-0 w-full h-auto rounded-lg ${
+                      showKineticChain ? "z-0" : "z-10"
+                    }`}
+                    type="video/mp4"
+                  />
+                )}
+                {fileWithJoint2 && (
+                  <video
+                    src={fileWithJoint2}
+                    ref={trackedVideoRef2}
+                    controls
+                    className={`absolute top-0 left-0 w-full h-auto rounded-lg ${
+                      showKineticChain ? "z-10" : "z-0"
+                    }`}
+                    type="video/mp4"
+                    onError={() => console.error("Error loading video")}
+                    onLoadedData={() =>
+                      console.log("Successfully loaded video")
+                    }
+                  />
+                )}
+              </div>
+
               {/* {fileWithJoint && (
                 <div style={{ marginTop: "20px" }}>
                   {fileWithJoint.endsWith("mp4") ? (
