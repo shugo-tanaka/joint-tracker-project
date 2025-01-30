@@ -169,39 +169,30 @@ const DragDrop = () => {
 
   const handleKineticChain = (e) => {
     e.preventDefault();
+    const original1 = originalVideoRef1.current;
+    const tracked1 = trackedVideoRef1.current;
+    const original2 = originalVideoRef2.current;
+    const tracked2 = trackedVideoRef2.current;
 
     if (showKineticChain) {
       // Sync the current time of the original video to the tracked video
       if (originalVideoRef1.current && trackedVideoRef1.current) {
-        console.log(
-          "original video's previouse time:",
-          originalVideoRef1.currentTime
-        );
-        trackedVideoRef1.current.pause(); // Pause the tracked video
+        original1.currentTime = tracked1.currentTime;
+        setShowKineticChain(false);
+      }
 
-        originalVideoRef1.currentTime = trackedVideoRef1.currentTime; // Sync time
-
-        console.log(
-          "original video's time after sync:",
-          originalVideoRef1.currentTime
-        );
+      if (originalVideoRef2.current && trackedVideoRef2.current) {
+        original2.currentTime = tracked2.currentTime;
         setShowKineticChain(false);
       }
     } else {
       // Sync the current time of the tracked video to the original video
       if (originalVideoRef1.current && trackedVideoRef1.current) {
-        console.log(
-          "Tracked video's previouse time:",
-          originalVideoRef1.currentTime
-        );
-        originalVideoRef1.current.pause(); // Pause the original video
-
-        trackedVideoRef1.currentTime = originalVideoRef1.currentTime; // Sync time
-
-        console.log(
-          "Tracked video's time after sync:",
-          originalVideoRef1.currentTime
-        );
+        tracked1.currentTime = original1.currentTime;
+        setShowKineticChain(true);
+      }
+      if (originalVideoRef2.current && trackedVideoRef2.current) {
+        tracked2.currentTime = original2.currentTime;
         setShowKineticChain(true);
       }
     }
