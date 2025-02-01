@@ -2,9 +2,9 @@
 To Do:
 show error message if show kinetic chain is clicked but there is not a file returned yet.
 create a show kinetic chain button for left side and right side.
+
+Completed:
 if a new file is loaded, show video as loading until the original has been processed into a video with tracking.
-Need to sync the times of the video!
-original and processed video have different time? how?
 */
 
 "use client";
@@ -20,10 +20,13 @@ const DragDrop = () => {
   const [fileWithJoint, setFileWithJoint] = useState(null);
   const [fileWithJoint2, setFileWithJoint2] = useState(null);
   const [showKineticChain, setShowKineticChain] = useState(false);
+  const [showKineticChain2, setShowKineticChain2] = useState(false);
   const originalVideoRef1 = useRef(null);
   const originalVideoRef2 = useRef(null);
   const trackedVideoRef1 = useRef(null);
   const trackedVideoRef2 = useRef(null);
+  const [loading1, setLoading1] = useState(false);
+  const [loading2, setLoading2] = useState(false);
 
   const onDrop = (acceptedFiles) => {
     const uploadedFile = acceptedFiles[0];
@@ -34,6 +37,7 @@ const DragDrop = () => {
   useEffect(() => {
     const getJoints1 = async () => {
       // console.log("file has changed:", file);
+      setLoading1(true);
       const formData = new FormData();
       formData.append("file", fileToSend); // Ensure file is added correctly
       // console.log([...formData]);
@@ -67,6 +71,7 @@ const DragDrop = () => {
           // link.click();
           // window.open(url);
           setFileWithJoint(url);
+          setLoading1(false);
         } else {
           console.error("Error processing the video", response.status);
         }
@@ -99,6 +104,7 @@ const DragDrop = () => {
 
   useEffect(() => {
     const getJoints2 = async () => {
+      setLoading2(true);
       // console.log("file has changed:", file);
       const formData = new FormData();
       formData.append("file", fileToSend2); // Ensure file is added correctly
@@ -133,6 +139,7 @@ const DragDrop = () => {
           // link.click();
           // window.open(url);
           setFileWithJoint2(url);
+          setLoading2(false);
         } else {
           console.error("Error processing the video", response.status);
         }
@@ -171,29 +178,55 @@ const DragDrop = () => {
     e.preventDefault();
     const original1 = originalVideoRef1.current;
     const tracked1 = trackedVideoRef1.current;
-    const original2 = originalVideoRef2.current;
-    const tracked2 = trackedVideoRef2.current;
+    // const original2 = originalVideoRef2.current;
+    // const tracked2 = trackedVideoRef2.current;
 
     if (showKineticChain) {
       // Sync the current time of the original video to the tracked video
       if (originalVideoRef1.current && trackedVideoRef1.current) {
         original1.currentTime = tracked1.currentTime;
+        tracked1.pause();
         setShowKineticChain(false);
       }
 
-      if (originalVideoRef2.current && trackedVideoRef2.current) {
-        original2.currentTime = tracked2.currentTime;
-        setShowKineticChain(false);
-      }
+      // if (originalVideoRef2.current && trackedVideoRef2.current) {
+      //   original2.currentTime = tracked2.currentTime;
+      //   setShowKineticChain(false);
+      // }
     } else {
       // Sync the current time of the tracked video to the original video
       if (originalVideoRef1.current && trackedVideoRef1.current) {
         tracked1.currentTime = original1.currentTime;
+        original1.pause();
         setShowKineticChain(true);
       }
+      // if (originalVideoRef2.current && trackedVideoRef2.current) {
+      //   tracked2.currentTime = original2.currentTime;
+      //   setShowKineticChain(true);
+      // }
+    }
+  };
+
+  const handleKineticChain2 = (e) => {
+    e.preventDefault();
+    const original2 = originalVideoRef2.current;
+    const tracked2 = trackedVideoRef2.current;
+
+    if (showKineticChain2) {
+      // Sync the current time of the original video to the tracked video
+
+      if (originalVideoRef2.current && trackedVideoRef2.current) {
+        original2.currentTime = tracked2.currentTime;
+        tracked2.pause();
+        setShowKineticChain2(false);
+      }
+    } else {
+      // Sync the current time of the tracked video to the original video
+
       if (originalVideoRef2.current && trackedVideoRef2.current) {
         tracked2.currentTime = original2.currentTime;
-        setShowKineticChain(true);
+        original2.pause();
+        setShowKineticChain2(true);
       }
     }
   };
@@ -206,27 +239,6 @@ const DragDrop = () => {
         <div className="text-black text-xl text-center">
           Kinetic Chain Comparison
         </div>
-        {showKineticChain ? (
-          <button
-            className="my-5 mx-auto bg-white hover:bg-gray-100 text-gray-800 px-4 border border-gray-400 rounded shadow"
-            onClick={(e) => {
-              handleKineticChain(e);
-              console.log("button clicked");
-            }}
-          >
-            Hide Kinetic Chain
-          </button>
-        ) : (
-          <button
-            className="my-5 mx-auto bg-white hover:bg-gray-100 text-gray-800 px-4 border border-gray-400 rounded shadow"
-            onClick={(e) => {
-              handleKineticChain(e);
-              console.log("button clicked");
-            }}
-          >
-            Show Kinetic Chain
-          </button>
-        )}
         <div className="holds-L-R flex flex-row my-5 justify-center">
           {" "}
           {/*holds the two drop zones*/}
@@ -235,81 +247,156 @@ const DragDrop = () => {
             {/*holds video 1 divs*/}
             <div
               {...getRootProps()}
-              className="border-2 border-dashed border-gray-300 p-2.5 w-full text-center cursor-pointer"
+              className="border-2 border-dashed border-gray-300 p-2.5 w-full text-center cursor-pointer flex flex-col items-center"
             >
               <input {...getInputProps()} />
               <p className="text-black">
                 Video 1: Drag & drop a file here, or click to select
               </p>
-              <div className="relative w-full max-w-lg h-auto">
-                {file && (
-                  <video
-                    src={file}
-                    ref={originalVideoRef1}
-                    controls
-                    className={`absolute top-0 left-0 w-full h-auto rounded-lg ${
-                      showKineticChain ? "z-0" : "z-10"
-                    }`}
-                    type="video/mp4"
-                  />
-                )}
-                {fileWithJoint && (
-                  <video
-                    src={fileWithJoint}
-                    ref={trackedVideoRef1}
-                    controls
-                    className={`absolute top-0 left-0 w-full h-auto rounded-lg ${
-                      showKineticChain ? "z-10" : "z-0"
-                    }`}
-                    type="video/mp4"
-                    onError={() => console.error("Error loading video")}
-                    onLoadedData={() =>
-                      console.log("Successfully loaded video")
-                    }
-                  />
-                )}
-              </div>
+              {loading1 ? (
+                <div className="flex flex-col items-center justify-center mt-5 mb-10">
+                  {/* Loading spinner */}
+                  <div>Processing Video</div>
+                  <svg
+                    className="animate-spin h-8 w-8 text-blue-600"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    ></circle>
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+                    ></path>
+                  </svg>
+                </div>
+              ) : (
+                <div className="relative w-full max-w-lg h-auto min-h-[300px]">
+                  {file && (
+                    <video
+                      src={file}
+                      ref={originalVideoRef1}
+                      controls
+                      className={`absolute max-h-[300px] top-0 left-0 w-full h-auto rounded-lg ${
+                        showKineticChain ? "z-0" : "z-10"
+                      }`}
+                      type="video/mp4"
+                    />
+                  )}
+                  {fileWithJoint && (
+                    <video
+                      src={fileWithJoint}
+                      ref={trackedVideoRef1}
+                      controls
+                      className={`absolute max-h-[300px] top-0 left-0 w-full h-auto rounded-lg ${
+                        showKineticChain ? "z-10" : "z-0"
+                      }`}
+                      type="video/mp4"
+                      onError={() => console.error("Error loading video")}
+                      onLoadedData={() =>
+                        console.log("Successfully loaded video")
+                      }
+                    />
+                  )}
+                </div>
+              )}
             </div>
+            {showKineticChain ? (
+              <button
+                className="my-5 mx-auto bg-white hover:bg-gray-100 text-gray-800 px-4 border border-gray-400 rounded shadow"
+                onClick={(e) => {
+                  handleKineticChain(e);
+                  console.log("button clicked");
+                }}
+              >
+                Hide Kinetic Chain
+              </button>
+            ) : (
+              <button
+                className="my-5 mx-auto bg-white hover:bg-gray-100 text-gray-800 px-4 border border-gray-400 rounded shadow"
+                onClick={(e) => {
+                  handleKineticChain(e);
+                  console.log("button clicked");
+                }}
+              >
+                Show Kinetic Chain
+              </button>
+            )}
           </div>
           <div className="C w-5"></div>{" "}
           {/*just to add space between the videos*/}
           <div className="Right flex flex-col justify-center w-full">
             <div
               {...getRootProps2()}
-              className="border-2 border-dashed border-gray-300 p-2.5 w-full text-center cursor-pointer"
+              className="border-2 border-dashed border-gray-300 p-2.5 w-full text-center cursor-pointer flex flex-col items-center"
             >
               <input {...getInputProps2()} />
               <p className="text-black">
                 Video 2: Drag & drop a file here, or click to select
               </p>
-              <div className="relative w-full max-w-lg h-auto">
-                {file2 && (
-                  <video
-                    src={file2}
-                    ref={originalVideoRef2}
-                    controls
-                    className={`absolute top-0 left-0 w-full h-auto rounded-lg ${
-                      showKineticChain ? "z-0" : "z-10"
-                    }`}
-                    type="video/mp4"
-                  />
-                )}
-                {fileWithJoint2 && (
-                  <video
-                    src={fileWithJoint2}
-                    ref={trackedVideoRef2}
-                    controls
-                    className={`absolute top-0 left-0 w-full h-auto rounded-lg ${
-                      showKineticChain ? "z-10" : "z-0"
-                    }`}
-                    type="video/mp4"
-                    onError={() => console.error("Error loading video")}
-                    onLoadedData={() =>
-                      console.log("Successfully loaded video")
-                    }
-                  />
-                )}
-              </div>
+              {loading2 ? (
+                <div className="flex flex-col items-center justify-center mt-5 mb-10">
+                  {/* Loading spinner */}
+                  <div>Processing Video</div>
+                  <svg
+                    className="animate-spin h-8 w-8 text-blue-600"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    ></circle>
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+                    ></path>
+                  </svg>
+                </div>
+              ) : (
+                <div className="relative w-full max-w-lg h-auto min-h-[300px]">
+                  {file2 && (
+                    <video
+                      src={file2}
+                      ref={originalVideoRef2}
+                      controls
+                      className={`absolute max-h-[300px] top-0 left-0 w-full h-auto rounded-lg ${
+                        showKineticChain2 ? "z-0" : "z-10"
+                      }`}
+                      type="video/mp4"
+                    />
+                  )}
+                  {fileWithJoint2 && (
+                    <video
+                      src={fileWithJoint2}
+                      ref={trackedVideoRef2}
+                      controls
+                      className={`absolute max-h-[300px] top-0 left-0 w-full h-auto rounded-lg ${
+                        showKineticChain2 ? "z-10" : "z-0"
+                      }`}
+                      type="video/mp4"
+                      onError={() => console.error("Error loading video")}
+                      onLoadedData={() =>
+                        console.log("Successfully loaded video")
+                      }
+                    />
+                  )}
+                </div>
+              )}
 
               {/* {fileWithJoint && (
                 <div style={{ marginTop: "20px" }}>
@@ -358,6 +445,28 @@ const DragDrop = () => {
                 </div>
               )} */}
             </div>
+
+            {showKineticChain2 ? (
+              <button
+                className="my-5 mx-auto bg-white hover:bg-gray-100 text-gray-800 px-4 border border-gray-400 rounded shadow"
+                onClick={(e) => {
+                  handleKineticChain2(e);
+                  console.log("button clicked");
+                }}
+              >
+                Hide Kinetic Chain
+              </button>
+            ) : (
+              <button
+                className="my-5 mx-auto bg-white hover:bg-gray-100 text-gray-800 px-4 border border-gray-400 rounded shadow"
+                onClick={(e) => {
+                  handleKineticChain2(e);
+                  console.log("button clicked");
+                }}
+              >
+                Show Kinetic Chain
+              </button>
+            )}
           </div>
         </div>
       </div>
